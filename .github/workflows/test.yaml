@@ -1,0 +1,23 @@
+name: "Test"
+run-name: "Test"
+on:
+  - push
+
+jobs:
+  test:
+    name: Test module
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        name: Checkout repository
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+
+      - name: Get deps
+        run: go mod download
+      
+      - name: Test
+        run: go test -v ./...

@@ -1,0 +1,6 @@
+{
+    "commitUrlFormat": "{{host}}/pixlcrashr/go-pagetoken/commit/{{hash}}",
+    "compareUrlFormat": "{{host}}/pixlcrashr/go-pagetoken/compare/{{previousTag}}...{{currentTag}}",
+    "issueUrlFormat": "{{host}}/pixlcrashr/go-pagetoken/issues/{{id}}",
+    "userUrlFormat": "{{host}}/{{user}}"
+}
