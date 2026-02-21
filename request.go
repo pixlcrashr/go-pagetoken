@@ -16,7 +16,7 @@ type Request interface {
 	GetPageToken() string
 }
 
-func FromRequest(e *encryption.Encryptor, req Request, checksumOpts ...checksum.BuilderOpt) (*Cursor, error) {
+func FromRequest(e encryption.Encryptor, req Request, checksumOpts ...checksum.BuilderOpt) (*Cursor, error) {
 	t := req.GetPageToken()
 	var c *Cursor
 

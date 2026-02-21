@@ -8,12 +8,12 @@ import (
 )
 
 type Parser struct {
-	encryptor *encryption.Encryptor
+	encryptor encryption.Encryptor
 }
 
 type ParserOpt func(*Parser)
 
-func WithEncryptor(e *encryption.Encryptor) ParserOpt {
+func WithEncryptor(e encryption.Encryptor) ParserOpt {
 	return func(p *Parser) {
 		p.encryptor = e
 	}

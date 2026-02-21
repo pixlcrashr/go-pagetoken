@@ -26,10 +26,10 @@ var _ = Describe("Encryption", func() {
 
 		Describe(fmt.Sprintf("with key size %d", keySize), func() {
 			var err error
-			var e *encryption.Encryptor
+			var e encryption.Encryptor
 
 			BeforeEach(func() {
-				e, err = encryption.NewEncryptor(randKey(keySize))
+				e, err = encryption.NewAEADEncryptor(randKey(keySize))
 				Expect(err).ToNot(HaveOccurred())
 			})
 

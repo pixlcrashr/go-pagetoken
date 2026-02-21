@@ -25,7 +25,7 @@ type CursorField struct {
 
 type Cursor struct {
 	checksum  uint32
-	encryptor *encryption.Encryptor
+	encryptor encryption.Encryptor
 	fields    []CursorField
 }
 

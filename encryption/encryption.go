@@ -28,11 +28,16 @@ func Rand32ByteKey() ([]byte, error) {
 	return randKey(32)
 }
 
-type Encryptor struct {
+type Encryptor interface {
+	Encrypt(d []byte) (string, error)
+	Decrypt(token string) ([]byte, error)
+}
+
+type AEADEncryptor struct {
 	aead cipher.AEAD
 }
 
-func NewEncryptor(key []byte) (*Encryptor, error) {
+func NewAEADEncryptor(key []byte) (*AEADEncryptor, error) {
 	// Key must be 16, 24, or 32 bytes for AES-128, AES-192, or AES-256
 	if len(key) != 16 && len(key) != 24 && len(key) != 32 {
 		return nil, errors.New("invalid key size: must be 16, 24, or 32 bytes")
@@ -48,10 +53,10 @@ func NewEncryptor(key []byte) (*Encryptor, error) {
 		return nil, fmt.Errorf("failed to create GCM: %w", err)
 	}
 
-	return &Encryptor{aead: aead}, nil
+	return &AEADEncryptor{aead: aead}, nil
 }
 
-func (e *Encryptor) Encrypt(d []byte) (string, error) {
+func (e *AEADEncryptor) Encrypt(d []byte) (string, error) {
 	nonce := make([]byte, e.aead.NonceSize())
 	r := rand.ChaCha8{}
 	if _, err := r.Read(nonce); err != nil {
@@ -65,7 +70,7 @@ func (e *Encryptor) Encrypt(d []byte) (string, error) {
 	return base64.URLEncoding.EncodeToString(ciphertext), nil
 }
 
-func (e *Encryptor) Decrypt(token string) ([]byte, error) {
+func (e *AEADEncryptor) Decrypt(token string) ([]byte, error) {
 	ciphertext, err := base64.URLEncoding.DecodeString(token)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode token: %w", err)

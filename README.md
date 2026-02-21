@@ -37,9 +37,19 @@ import (
     "github.com/pixlcrashr/go-pagetoken/encryption"
 )
 
-// Use a secure key (32 bytes for AES-256)
+// Option 1: Use a secure key from environment or secrets manager
 key := []byte("your-32-byte-secret-key-here!!!!")
-encryptor, err := encryption.NewEncryptor(key)
+encryptor, err := encryption.NewAEADEncryptor(key)
+if err != nil {
+    log.Fatal(err)
+}
+
+// Option 2: Generate a random key (for development/testing)
+key, err := encryption.Rand32ByteKey()
+if err != nil {
+    log.Fatal(err)
+}
+encryptor, err := encryption.NewAEADEncryptor(key)
 if err != nil {
     log.Fatal(err)
 }
@@ -146,11 +156,31 @@ func HandleListUsers(w http.ResponseWriter, r *http.Request) {
 
 ## How It Works
 
+### Encryption Submodule
+
+The library provides a flexible encryption system through the `Encryptor` interface:
+
+- **Interface-Based Design**: The `Encryptor` interface allows for custom encryption implementations
+- **AEAD Encryption**: Default implementation uses AES-GCM (Authenticated Encryption with Associated Data)
+- **ChaCha8 PRNG**: Nonce generation uses Go's ChaCha8 pseudo-random number generator from `math/rand/v2`
+- **Key Generation Helpers**: Built-in functions to generate random keys for different AES variants
+
+**Encryption Flow:**
+```
+plaintext → JSON encode → AES-GCM encrypt → base64 URL encode → token string
+```
+
+**Decryption Flow:**
+```
+token string → base64 URL decode → AES-GCM decrypt → JSON decode → plaintext
+```
+
 ### Security Model
 
-1. **Encryption**: Page tokens are encrypted using AES-GCM, ensuring confidentiality and authenticity
-2. **Checksum Validation**: Each token includes a checksum of the pagination parameters, preventing clients from changing filters mid-pagination
+1. **Encryption**: Page tokens are encrypted using AES-GCM AEAD, ensuring confidentiality and authenticity
+2. **Checksum Validation**: Each token includes a CRC32 checksum of the pagination parameters, preventing clients from changing filters mid-pagination
 3. **Tamper Detection**: Any modification to the encrypted token will cause decryption to fail
+4. **Nonce Uniqueness**: Each encryption operation uses a fresh nonce generated via ChaCha8 PRNG
 
 ### Token Format
 
@@ -173,14 +203,90 @@ The checksum prevents pagination inconsistencies. For example, if a client reque
 - **`CursorField`**: A single field in a cursor (path, value, order)
 - **`Order`**: Sort order (ascending or descending)
 
+### Encryption Package
+
+- **`Encryptor`**: Interface for encryption/decryption implementations
+- **`AEADEncryptor`**: AES-GCM AEAD implementation of the Encryptor interface
+- **`NewAEADEncryptor(key)`**: Create a new AEAD encryptor with AES key (16/24/32 bytes)
+- **`Rand16ByteKey()`**: Generate a random 16-byte key for AES-128
+- **`Rand24ByteKey()`**: Generate a random 24-byte key for AES-192
+- **`Rand32ByteKey()`**: Generate a random 32-byte key for AES-256
+
+### Checksum Package
+
+- **`Builder`**: Builds CRC32 checksums from field data
+- **`NewBuilder(opts...)`**: Create a new checksum builder
+- **`Field(key, value)`**: Add a field to the checksum
+- **`Mask(mask)`**: Set a custom checksum mask (default: 0x58AEF322)
+
 ### Main Functions
 
 - **`FromRequest(encryptor, request, opts...)`**: Parse or create a cursor from an API request
 - **`Field(key, value, order)`**: Create a cursor field option
 - **`NewParser(opts...)`**: Create a new token parser
-- **`NewEncryptor(key)`**: Create a new encryptor with AES key
 
 See the [GoDoc](https://pkg.go.dev/github.com/pixlcrashr/go-pagetoken) for complete API documentation.
+
+## Advanced Usage
+
+### Custom Encryption Implementation
+
+You can implement your own encryption strategy by satisfying the `Encryptor` interface:
+
+```go
+type Encryptor interface {
+    Encrypt(d []byte) (string, error)
+    Decrypt(token string) ([]byte, error)
+}
+```
+
+Example with a custom encryptor:
+
+```go
+type CustomEncryptor struct {
+    // Your custom fields
+}
+
+func (e *CustomEncryptor) Encrypt(data []byte) (string, error) {
+    // Your encryption logic
+    return encryptedString, nil
+}
+
+func (e *CustomEncryptor) Decrypt(token string) ([]byte, error) {
+    // Your decryption logic
+    return decryptedData, nil
+}
+
+// Use with pagetoken
+customEnc := &CustomEncryptor{}
+cursor, err := pagetoken.FromRequest(customEnc, req)
+```
+
+### Key Generation for Production
+
+For production environments, generate and store keys securely:
+
+```go
+// Generate a key once
+key, err := encryption.Rand32ByteKey()
+if err != nil {
+    log.Fatal(err)
+}
+
+// Store in environment or secrets manager
+// Example: export PAGE_TOKEN_KEY=$(echo $key | base64)
+
+// Load in application
+keyBytes, err := base64.StdEncoding.DecodeString(os.Getenv("PAGE_TOKEN_KEY"))
+if err != nil {
+    log.Fatal(err)
+}
+
+encryptor, err := encryption.NewAEADEncryptor(keyBytes)
+if err != nil {
+    log.Fatal(err)
+}
+```
 
 ## Best Practices
 
@@ -189,14 +295,18 @@ See the [GoDoc](https://pkg.go.dev/github.com/pixlcrashr/go-pagetoken) for compl
 3. **Include Relevant Fields**: Add all fields that affect query results to the checksum
 4. **Consistent Ordering**: Use the same field ordering across requests for predictable pagination
 5. **Limit Page Size**: Enforce reasonable page size limits to prevent performance issues
+6. **Production Keys**: Always use cryptographically secure random keys in production (use the `Rand*ByteKey()` helpers)
 
 ## Security Considerations
 
 - **Key Size**: Use 32-byte keys (AES-256) for production environments
 - **Key Storage**: Never hardcode encryption keys; use secure key management
+- **Key Generation**: The `Rand*ByteKey()` functions use ChaCha8 PRNG which is suitable for key generation but not cryptographic random number generation in security-critical contexts
+- **Nonce Generation**: AEADEncryptor uses ChaCha8 for nonce generation, which is appropriate for GCM mode
 - **Token Lifetime**: Consider implementing token expiration for additional security
 - **HTTPS Only**: Always use HTTPS to prevent token interception
 - **Information Disclosure**: While tokens are encrypted, avoid including sensitive data in cursor fields
+- **Custom Implementations**: If implementing a custom `Encryptor`, ensure your implementation provides authenticated encryption
 
 ## Contributing
 
