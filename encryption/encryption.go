@@ -28,9 +28,17 @@ func Rand32ByteKey() ([]byte, error) {
 	return randKey(32)
 }
 
-type Encryptor interface {
+type Encrypter interface {
 	Encrypt(d []byte) (string, error)
+}
+
+type Decrypter interface {
 	Decrypt(token string) ([]byte, error)
+}
+
+type Crypter interface {
+	Encrypter
+	Decrypter
 }
 
 type AEADEncryptor struct {

@@ -16,13 +16,13 @@ type Request interface {
 	GetPageToken() string
 }
 
-func FromRequest(e encryption.Encryptor, req Request, checksumOpts ...checksum.BuilderOpt) (*Cursor, error) {
+func KeysetTokenFromRequest(e encryption.Crypter, req Request, checksumOpts ...checksum.BuilderOpt) (*KeysetToken, error) {
 	t := req.GetPageToken()
-	var c *Cursor
+	var c *KeysetToken
 
 	if t == "" {
 		// create a newly initialized cursor
-		c = &Cursor{}
+		c = &KeysetToken{}
 		cb := checksum.NewBuilder(checksumOpts...)
 		for _, field := range req.GetChecksumFields() {
 			field(cb)
@@ -32,12 +32,12 @@ func FromRequest(e encryption.Encryptor, req Request, checksumOpts ...checksum.B
 			return nil, err
 		}
 		c.checksum = crc
-		c.encryptor = e
-		c.fields = []CursorField{}
+		c.e = e
+		c.fields = []KeysetField{}
 		return c, nil
 	}
 
-	p := NewParser(WithEncryptor(e))
+	p := NewKeysetTokenParser(WithKeysetTokenEncryptor(e))
 	c, err := p.Parse(t)
 	if err != nil {
 		return nil, err
