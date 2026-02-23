@@ -2,7 +2,7 @@ package gorm
 
 import (
 	"github.com/pixlcrashr/go-pagetoken"
-	"gorm.io/gen/field"
+	"gorm.io/gorm/clause"
 )
 
 type KeysetFieldOp int
@@ -13,15 +13,15 @@ const (
 	KeysetFieldOpGt
 )
 
-type KeysetFieldFn func(field string, value string, op KeysetFieldOp) (field.Expr, error)
+type KeysetFieldFn func(field string, value string, op KeysetFieldOp) (clause.Expression, error)
 
-func KeysetTokenCond(token *pagetoken.KeysetToken, fieldFn KeysetFieldFn) (field.Expr, error) {
+func KeysetTokenCond(token *pagetoken.KeysetToken, fieldFn KeysetFieldFn) (clause.Expression, error) {
 	fs := token.Fields()
 
-	or := []field.Expr{}
+	or := []clause.Expression{}
 
 	for i := 0; i < len(fs)-1; i++ {
-		and := []field.Expr{}
+		and := []clause.Expression{}
 
 		for j := 0; j < i-1; j++ {
 			f := fs[j]
@@ -47,8 +47,8 @@ func KeysetTokenCond(token *pagetoken.KeysetToken, fieldFn KeysetFieldFn) (field
 			and = append(and, expr)
 		}
 
-		or = append(or, field.And(and...))
+		or = append(or, clause.And(and...))
 	}
 
-	return field.Or(or...), nil
+	return clause.Or(or...), nil
 }
