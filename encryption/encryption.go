@@ -3,16 +3,15 @@ package encryption
 import (
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/rand"
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"math/rand/v2"
 )
 
 func randKey(size int) ([]byte, error) {
 	key := make([]byte, size)
-	r := rand.ChaCha8{}
-	_, err := r.Read(key)
+	_, err := rand.Read(key)
 	return key, err
 }
 
@@ -66,8 +65,7 @@ func NewAEADEncryptor(key []byte) (*AEADEncryptor, error) {
 
 func (e *AEADEncryptor) Encrypt(d []byte) (string, error) {
 	nonce := make([]byte, e.aead.NonceSize())
-	r := rand.ChaCha8{}
-	if _, err := r.Read(nonce); err != nil {
+	if _, err := rand.Read(nonce); err != nil {
 		return "", fmt.Errorf("failed to generate nonce: %w", err)
 	}
 
