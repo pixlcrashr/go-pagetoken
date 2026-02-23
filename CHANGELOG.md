@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [1.2.0](https://github.com/pixlcrashr/go-pagetoken/compare/v1.1.0...v1.2.0) (2026-02-23)
+
+
+### Features
+
+* **gorm:** implement KeysetTokenCond builder with field operation support ([b1625d2](https://github.com/pixlcrashr/go-pagetoken/commit/b1625d255956fdac550d278ab9cfa7115e8148f7))
+
 ## [1.1.0](https://github.com/pixlcrashr/go-pagetoken/compare/v1.0.2...v1.1.0) (2026-02-23)
 
 
