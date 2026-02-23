@@ -18,10 +18,10 @@ type KeysetFieldFn func(field string, value string, op KeysetFieldOp) (clause.Ex
 func KeysetFieldsExpr(fields []pagetoken.KeysetField, fieldFn KeysetFieldFn) (clause.Expression, error) {
 	or := []clause.Expression{}
 
-	for i := 0; i < len(fields)-1; i++ {
+	for i := 0; i < len(fields); i++ {
 		and := []clause.Expression{}
 
-		for j := 0; j < i-1; j++ {
+		for j := 0; j < i; j++ {
 			f := fields[j]
 			expr, err := fieldFn(f.Path, f.Value, KeysetFieldOpEq)
 			if err != nil {
