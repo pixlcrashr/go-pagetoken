@@ -5,6 +5,7 @@ go 1.25.4
 require (
 	github.com/onsi/ginkgo/v2 v2.28.1
 	github.com/onsi/gomega v1.39.1
+	gorm.io/gorm v1.31.1
 )
 
 require (
