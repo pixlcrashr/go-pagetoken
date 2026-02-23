@@ -16,14 +16,51 @@ type Request interface {
 	GetPageToken() string
 }
 
-func KeysetTokenFromRequest(e encryption.Crypter, req Request, checksumOpts ...checksum.BuilderOpt) (*KeysetToken, error) {
+type RequestReader struct {
+	e            encryption.Crypter
+	checksumOpts []checksum.BuilderOpt
+}
+
+type RequestReaderOpt func(*RequestReader)
+
+func WithChecksumOpts(opts ...checksum.BuilderOpt) RequestReaderOpt {
+	return func(rr *RequestReader) {
+		rr.checksumOpts = opts
+	}
+}
+
+func WithEncryptor(e encryption.Crypter) RequestReaderOpt {
+	return func(rr *RequestReader) {
+		rr.e = e
+	}
+}
+
+func NewRequestReader(
+	opts ...RequestReaderOpt,
+) *RequestReader {
+	rr := &RequestReader{}
+	for _, opt := range opts {
+		opt(rr)
+	}
+
+	// TODO: add defaults
+	return rr
+}
+
+func (r *RequestReader) createChecksumBuilder(opts ...checksum.BuilderOpt) *checksum.Builder {
+	cb := checksum.NewBuilder(opts...)
+	return cb
+}
+
+func (r *RequestReader) Read(req Request) (*KeysetToken, error) {
 	t := req.GetPageToken()
 	var c *KeysetToken
 
 	if t == "" {
 		// create a newly initialized cursor
 		c = &KeysetToken{}
-		cb := checksum.NewBuilder(checksumOpts...)
+		cb := r.createChecksumBuilder()
+
 		for _, field := range req.GetChecksumFields() {
 			field(cb)
 		}
@@ -32,19 +69,19 @@ func KeysetTokenFromRequest(e encryption.Crypter, req Request, checksumOpts ...c
 			return nil, err
 		}
 		c.checksum = crc
-		c.e = e
-		c.fields = []KeysetField{}
+		c.e = r.e
+		c.payload = &KeysetPayload{}
 		return c, nil
 	}
 
-	p := NewKeysetTokenParser(WithKeysetTokenEncryptor(e))
+	p := NewKeysetTokenParser(WithKeysetTokenEncryptor(r.e))
 	c, err := p.Parse(t)
 	if err != nil {
 		return nil, err
 	}
 
 	// verify request checksum with page token checksum
-	cb := checksum.NewBuilder(checksumOpts...)
+	cb := r.createChecksumBuilder()
 	for _, field := range req.GetChecksumFields() {
 		field(cb)
 	}

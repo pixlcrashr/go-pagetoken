@@ -9,7 +9,7 @@ import (
 	"github.com/pixlcrashr/go-pagetoken/encryption"
 )
 
-type KeysetField struct {
+type KeysetValue struct {
 	Path  string
 	Order Order
 	Value string
@@ -18,7 +18,7 @@ type KeysetField struct {
 type KeysetToken struct {
 	checksum uint32
 	e        encryption.Crypter
-	fields   []KeysetField
+	payload  *KeysetPayload
 }
 
 func (b *KeysetToken) Checksum() uint32 {
@@ -36,23 +36,13 @@ func (t *KeysetToken) tokenize(d []string) (string, error) {
 
 var ErrFieldNotFound = errors.New("field not found")
 
-func (c *KeysetToken) Field(k string) (KeysetField, error) {
-	for _, param := range c.fields {
-		if param.Path == k {
-			return param, nil
-		}
-	}
-
-	return KeysetField{}, ErrFieldNotFound
-}
-
-func (c *KeysetToken) Fields() []KeysetField {
-	return c.fields
+func (c *KeysetToken) Payload() *KeysetPayload {
+	return c.payload
 }
 
 func (c *KeysetToken) Next(opts ...KeysetTokenOpt) *KeysetToken {
 	newC := &KeysetToken{
-		fields: []KeysetField{},
+		payload: c.payload,
 	}
 
 	newC.e = c.e
@@ -66,9 +56,9 @@ func (c *KeysetToken) Next(opts ...KeysetTokenOpt) *KeysetToken {
 }
 
 func (c *KeysetToken) String() (string, error) {
-	d := make([]string, len(c.fields)*3)
+	d := make([]string, len(c.payload.vs)*3)
 
-	for i, field := range c.fields {
+	for i, field := range c.payload.vs {
 		d[i*3] = field.Path
 		d[i*3+1] = field.Value
 		d[i*3+2] = field.Order.String()
@@ -79,16 +69,9 @@ func (c *KeysetToken) String() (string, error) {
 
 type KeysetTokenOpt func(*KeysetToken)
 
-// WithKeysetField adds a field to the keyset token.
-//
-// The field will be included in the keyset token.
-func WithKeysetField(key, value string, order Order) KeysetTokenOpt {
+func WithKeysetPayload(payload *KeysetPayload) KeysetTokenOpt {
 	return func(c *KeysetToken) {
-		c.fields = append(c.fields, KeysetField{
-			Path:  key,
-			Value: value,
-			Order: order,
-		})
+		c.payload = payload
 	}
 }
 
@@ -120,14 +103,14 @@ func (p *KeysetTokenParser) Parse(token string) (*KeysetToken, error) {
 		return nil, err
 	}
 
-	fs := []KeysetField{}
+	vs := []KeysetValue{}
 	for i := 0; i < len(ps)-1; i += 3 {
 		o, err := ParseOrder(ps[i+2])
 		if err != nil {
 			return nil, err
 		}
 
-		fs = append(fs, KeysetField{
+		vs = append(vs, KeysetValue{
 			Path:  ps[i],
 			Value: ps[i+1],
 			Order: o,
@@ -137,7 +120,7 @@ func (p *KeysetTokenParser) Parse(token string) (*KeysetToken, error) {
 	return &KeysetToken{
 		checksum: uint32(crc),
 		e:        p.e,
-		fields:   fs,
+		payload:  &KeysetPayload{vs: vs},
 	}, nil
 }
 
