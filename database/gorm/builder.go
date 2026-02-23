@@ -15,16 +15,14 @@ const (
 
 type KeysetFieldFn func(field string, value string, op KeysetFieldOp) (clause.Expression, error)
 
-func KeysetTokenCond(token *pagetoken.KeysetToken, fieldFn KeysetFieldFn) (clause.Expression, error) {
-	fs := token.Fields()
-
+func KeysetFieldsExpr(fields []pagetoken.KeysetField, fieldFn KeysetFieldFn) (clause.Expression, error) {
 	or := []clause.Expression{}
 
-	for i := 0; i < len(fs)-1; i++ {
+	for i := 0; i < len(fields)-1; i++ {
 		and := []clause.Expression{}
 
 		for j := 0; j < i-1; j++ {
-			f := fs[j]
+			f := fields[j]
 			expr, err := fieldFn(f.Path, f.Value, KeysetFieldOpEq)
 			if err != nil {
 				return nil, err
@@ -32,7 +30,7 @@ func KeysetTokenCond(token *pagetoken.KeysetToken, fieldFn KeysetFieldFn) (claus
 			and = append(and, expr)
 		}
 
-		f := fs[i]
+		f := fields[i]
 		if f.Order == pagetoken.OrderDesc {
 			expr, err := fieldFn(f.Path, f.Value, KeysetFieldOpLt)
 			if err != nil {
