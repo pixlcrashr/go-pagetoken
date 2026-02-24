@@ -65,12 +65,12 @@ func KeysetWhereOrderLimit(
 			args = append(args, aV)
 		}
 
-		orExprs = append(orExprs, strings.Join(andExprs, " AND "))
+		orExprs = append(orExprs, "("+strings.Join(andExprs, " AND ")+")")
 		orderExprs = append(orderExprs, fmt.Sprintf("%s %s", v.Path, orderToSQL(v.Order)))
 	}
 
 	return db.Where(
-		strings.Join(orExprs, " OR "),
+		"("+strings.Join(orExprs, " OR ")+")",
 		args...,
 	).Order(
 		strings.Join(orderExprs, ", "),
