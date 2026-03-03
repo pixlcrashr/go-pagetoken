@@ -7,11 +7,12 @@ import (
 	"strconv"
 
 	"github.com/pixlcrashr/go-pagetoken/encryption"
+	"github.com/pixlcrashr/go-pagetoken/order"
 )
 
 type KeysetValue struct {
 	Path  string
-	Order Order
+	Order order.Order
 	Value string
 }
 
@@ -105,8 +106,8 @@ func (p *KeysetTokenParser) Parse(token string) (*KeysetToken, error) {
 
 	vs := []KeysetValue{}
 	for i := 0; i < len(ps)-1; i += 3 {
-		o, err := ParseOrder(ps[i+2])
-		if err != nil {
+		var o order.Order
+		if err := o.UnmarshalString(ps[i+2]); err != nil {
 			return nil, err
 		}
 

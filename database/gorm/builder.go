@@ -5,13 +5,14 @@ import (
 	"strings"
 
 	"github.com/pixlcrashr/go-pagetoken"
+	"github.com/pixlcrashr/go-pagetoken/order"
 	"gorm.io/gorm"
 )
 
 type KeysetWhereOrderLimitValueFn func(column string, payload *pagetoken.KeysetPayload) (any, error)
 
-func orderToSQL(o pagetoken.Order) string {
-	if o == pagetoken.OrderAsc {
+func orderToSQL(o order.Order) string {
+	if o == order.Asc {
 		return "ASC"
 	}
 
@@ -49,7 +50,7 @@ func KeysetWhereOrderLimit(
 		}
 
 		v := vs[i]
-		if v.Order == pagetoken.OrderDesc {
+		if v.Order == order.Desc {
 			andExprs = append(andExprs, fmt.Sprintf("%s < ?", v.Path))
 			aV, err := valueFn(v.Path, keyset)
 			if err != nil {

@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/pixlcrashr/go-pagetoken"
 	ptGorm "github.com/pixlcrashr/go-pagetoken/database/gorm"
+	"github.com/pixlcrashr/go-pagetoken/order"
 	"github.com/pixlcrashr/go-pagetoken/test/humaexample/db/model"
 	"gorm.io/gorm"
 )
@@ -23,13 +24,8 @@ type ListFilter struct {
 	IDEq            *string
 }
 
-type DefaultOrderEntry struct {
-	Column string
-	Order  pagetoken.Order
-}
-
-func orderToSQL(o pagetoken.Order) string {
-	if o == pagetoken.OrderAsc {
+func orderToSQL(o order.Order) string {
+	if o == order.Asc {
 		return "ASC"
 	}
 
@@ -40,7 +36,7 @@ func (r *BooksRepository) ListByKeyset(
 	ctx context.Context,
 	filter ListFilter,
 	pageSize int,
-	order []DefaultOrderEntry,
+	o order.Fields,
 	keyset *pagetoken.KeysetPayload,
 ) (ms []*model.Book, next *pagetoken.KeysetPayload, err error) {
 	q := r.DB.Model(&model.Book{})
@@ -92,11 +88,11 @@ func (r *BooksRepository) ListByKeyset(
 	}
 
 	if keyset == nil || len(keyset.Values()) == 0 {
-		if len(order) == 0 {
+		if len(o) == 0 {
 			q = q.Order("created_at DESC")
 		} else {
-			for _, o := range order {
-				q = q.Order(fmt.Sprintf("%s %s", o.Column, orderToSQL(o.Order)))
+			for _, o := range o {
+				q = q.Order(fmt.Sprintf("%s %s", o.Path, orderToSQL(o.Order)))
 			}
 		}
 	}
@@ -113,25 +109,25 @@ func (r *BooksRepository) ListByKeyset(
 		nextItem := ms[pageSize-1]
 
 		if keyset == nil || len(keyset.Values()) == 0 {
-			if len(order) == 0 {
+			if len(o) == 0 {
 				keyset = pagetoken.NewKeysetPayloadBuilder().
-					AddTime("created_at", time.Time{}, pagetoken.OrderDesc).
+					AddTime("created_at", time.Time{}, order.Desc).
 					Build()
 			} else {
 				b := pagetoken.NewKeysetPayloadBuilder()
 				// empty default setter
-				func(m *model.Book, keysetBuilder *pagetoken.KeysetPayloadBuilder, values []DefaultOrderEntry) {
+				func(m *model.Book, keysetBuilder *pagetoken.KeysetPayloadBuilder, values order.Fields) {
 					for _, v := range values {
-						switch v.Column {
+						switch v.Path {
 						case "id":
-							keysetBuilder.AddString(v.Column, "", v.Order)
+							keysetBuilder.AddString(v.Path, "", v.Order)
 						case "display_name":
-							keysetBuilder.AddString(v.Column, "", v.Order)
+							keysetBuilder.AddString(v.Path, "", v.Order)
 						case "created_at":
-							keysetBuilder.AddTime(v.Column, time.Time{}, v.Order)
+							keysetBuilder.AddTime(v.Path, time.Time{}, v.Order)
 						}
 					}
-				}(nextItem, b, order)
+				}(nextItem, b, o)
 				keyset = b.Build()
 			}
 		}

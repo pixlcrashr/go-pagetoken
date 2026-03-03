@@ -8,6 +8,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/pixlcrashr/go-pagetoken"
+	"github.com/pixlcrashr/go-pagetoken/order"
 )
 
 var _ = Describe("KeysetPayloadBuilder", func() {
@@ -20,10 +21,10 @@ var _ = Describe("KeysetPayloadBuilder", func() {
 
 		It("produces a payload independent of the builder", func() {
 			b := &pagetoken.KeysetPayloadBuilder{}
-			b.AddString("a", "first", pagetoken.OrderAsc)
+			b.AddString("a", "first", order.Asc)
 			p1 := b.Build()
 
-			b.AddString("b", "second", pagetoken.OrderAsc)
+			b.AddString("b", "second", order.Asc)
 			p2 := b.Build()
 
 			Expect(p1.Values()).To(HaveLen(1), "p1 must not see values added after Build")
@@ -34,9 +35,9 @@ var _ = Describe("KeysetPayloadBuilder", func() {
 	Describe("chaining", func() {
 		It("preserves insertion order across multiple typed Add calls", func() {
 			p := (&pagetoken.KeysetPayloadBuilder{}).
-				AddString("first", "a", pagetoken.OrderAsc).
-				AddInt("second", 2, pagetoken.OrderDesc).
-				AddBool("third", true, pagetoken.OrderAsc).
+				AddString("first", "a", order.Asc).
+				AddInt("second", 2, order.Desc).
+				AddBool("third", true, order.Asc).
 				Build()
 
 			vs := p.Values()
@@ -52,12 +53,12 @@ var _ = Describe("KeysetPayloadBuilder", func() {
 	Describe("AddString", func() {
 		It("stores the string value verbatim", func() {
 			p := (&pagetoken.KeysetPayloadBuilder{}).
-				AddString("s", "hello world", pagetoken.OrderAsc).
+				AddString("s", "hello world", order.Asc).
 				Build()
 			v, o, err := p.String("s")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal("hello world"))
-			Expect(o).To(Equal(pagetoken.OrderAsc))
+			Expect(o).To(Equal(order.Asc))
 		})
 	})
 
@@ -65,15 +66,15 @@ var _ = Describe("KeysetPayloadBuilder", func() {
 
 	Describe("AddBool", func() {
 		DescribeTable("encodes and round-trips booleans",
-			func(val bool, order pagetoken.Order) {
+			func(val bool, order order.Order) {
 				p := (&pagetoken.KeysetPayloadBuilder{}).AddBool("b", val, order).Build()
 				got, gotOrder, err := p.Bool("b")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(got).To(Equal(val))
 				Expect(gotOrder).To(Equal(order))
 			},
-			Entry("true / asc", true, pagetoken.OrderAsc),
-			Entry("false / desc", false, pagetoken.OrderDesc),
+			Entry("true / asc", true, order.Asc),
+			Entry("false / desc", false, order.Desc),
 		)
 	})
 
@@ -81,17 +82,17 @@ var _ = Describe("KeysetPayloadBuilder", func() {
 
 	Describe("AddInt", func() {
 		It("round-trips through Int", func() {
-			p := (&pagetoken.KeysetPayloadBuilder{}).AddInt("n", -42, pagetoken.OrderDesc).Build()
+			p := (&pagetoken.KeysetPayloadBuilder{}).AddInt("n", -42, order.Desc).Build()
 			v, o, err := p.Int("n")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(-42))
-			Expect(o).To(Equal(pagetoken.OrderDesc))
+			Expect(o).To(Equal(order.Desc))
 		})
 	})
 
 	Describe("AddInt8", func() {
 		It("round-trips through Int8", func() {
-			p := (&pagetoken.KeysetPayloadBuilder{}).AddInt8("n", -8, pagetoken.OrderAsc).Build()
+			p := (&pagetoken.KeysetPayloadBuilder{}).AddInt8("n", -8, order.Asc).Build()
 			v, _, err := p.Int8("n")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(int8(-8)))
@@ -100,7 +101,7 @@ var _ = Describe("KeysetPayloadBuilder", func() {
 
 	Describe("AddInt16", func() {
 		It("round-trips through Int16", func() {
-			p := (&pagetoken.KeysetPayloadBuilder{}).AddInt16("n", -1000, pagetoken.OrderAsc).Build()
+			p := (&pagetoken.KeysetPayloadBuilder{}).AddInt16("n", -1000, order.Asc).Build()
 			v, _, err := p.Int16("n")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(int16(-1000)))
@@ -109,7 +110,7 @@ var _ = Describe("KeysetPayloadBuilder", func() {
 
 	Describe("AddInt32", func() {
 		It("round-trips through Int32", func() {
-			p := (&pagetoken.KeysetPayloadBuilder{}).AddInt32("n", -100000, pagetoken.OrderDesc).Build()
+			p := (&pagetoken.KeysetPayloadBuilder{}).AddInt32("n", -100000, order.Desc).Build()
 			v, _, err := p.Int32("n")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(int32(-100000)))
@@ -118,7 +119,7 @@ var _ = Describe("KeysetPayloadBuilder", func() {
 
 	Describe("AddInt64", func() {
 		It("round-trips through Int64", func() {
-			p := (&pagetoken.KeysetPayloadBuilder{}).AddInt64("n", -9000000000, pagetoken.OrderAsc).Build()
+			p := (&pagetoken.KeysetPayloadBuilder{}).AddInt64("n", -9000000000, order.Asc).Build()
 			v, _, err := p.Int64("n")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(int64(-9000000000)))
@@ -129,17 +130,17 @@ var _ = Describe("KeysetPayloadBuilder", func() {
 
 	Describe("AddUint", func() {
 		It("round-trips through Uint", func() {
-			p := (&pagetoken.KeysetPayloadBuilder{}).AddUint("n", 42, pagetoken.OrderAsc).Build()
+			p := (&pagetoken.KeysetPayloadBuilder{}).AddUint("n", 42, order.Asc).Build()
 			v, o, err := p.Uint("n")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(uint(42)))
-			Expect(o).To(Equal(pagetoken.OrderAsc))
+			Expect(o).To(Equal(order.Asc))
 		})
 	})
 
 	Describe("AddUint8", func() {
 		It("round-trips through Uint8", func() {
-			p := (&pagetoken.KeysetPayloadBuilder{}).AddUint8("n", 255, pagetoken.OrderDesc).Build()
+			p := (&pagetoken.KeysetPayloadBuilder{}).AddUint8("n", 255, order.Desc).Build()
 			v, _, err := p.Uint8("n")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(uint8(255)))
@@ -148,7 +149,7 @@ var _ = Describe("KeysetPayloadBuilder", func() {
 
 	Describe("AddUint16", func() {
 		It("round-trips through Uint16", func() {
-			p := (&pagetoken.KeysetPayloadBuilder{}).AddUint16("n", 1000, pagetoken.OrderAsc).Build()
+			p := (&pagetoken.KeysetPayloadBuilder{}).AddUint16("n", 1000, order.Asc).Build()
 			v, _, err := p.Uint16("n")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(uint16(1000)))
@@ -157,7 +158,7 @@ var _ = Describe("KeysetPayloadBuilder", func() {
 
 	Describe("AddUint32", func() {
 		It("round-trips through Uint32", func() {
-			p := (&pagetoken.KeysetPayloadBuilder{}).AddUint32("n", 100000, pagetoken.OrderDesc).Build()
+			p := (&pagetoken.KeysetPayloadBuilder{}).AddUint32("n", 100000, order.Desc).Build()
 			v, _, err := p.Uint32("n")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(uint32(100000)))
@@ -166,7 +167,7 @@ var _ = Describe("KeysetPayloadBuilder", func() {
 
 	Describe("AddUint64", func() {
 		It("round-trips through Uint64", func() {
-			p := (&pagetoken.KeysetPayloadBuilder{}).AddUint64("n", 9000000000, pagetoken.OrderAsc).Build()
+			p := (&pagetoken.KeysetPayloadBuilder{}).AddUint64("n", 9000000000, order.Asc).Build()
 			v, _, err := p.Uint64("n")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(uint64(9000000000)))
@@ -178,8 +179,8 @@ var _ = Describe("KeysetPayloadBuilder", func() {
 	Describe("AddByte", func() {
 		It("is equivalent to AddUint8", func() {
 			const val byte = 0xAB
-			pByte := (&pagetoken.KeysetPayloadBuilder{}).AddByte("b", val, pagetoken.OrderAsc).Build()
-			pUint8 := (&pagetoken.KeysetPayloadBuilder{}).AddUint8("b", val, pagetoken.OrderAsc).Build()
+			pByte := (&pagetoken.KeysetPayloadBuilder{}).AddByte("b", val, order.Asc).Build()
+			pUint8 := (&pagetoken.KeysetPayloadBuilder{}).AddUint8("b", val, order.Asc).Build()
 
 			v1, _, _ := pByte.Byte("b")
 			v2, _, _ := pUint8.Uint8("b")
@@ -190,8 +191,8 @@ var _ = Describe("KeysetPayloadBuilder", func() {
 	Describe("AddRune", func() {
 		It("is equivalent to AddInt32", func() {
 			const val rune = '✓'
-			pRune := (&pagetoken.KeysetPayloadBuilder{}).AddRune("r", val, pagetoken.OrderDesc).Build()
-			pInt32 := (&pagetoken.KeysetPayloadBuilder{}).AddInt32("r", val, pagetoken.OrderDesc).Build()
+			pRune := (&pagetoken.KeysetPayloadBuilder{}).AddRune("r", val, order.Desc).Build()
+			pInt32 := (&pagetoken.KeysetPayloadBuilder{}).AddInt32("r", val, order.Desc).Build()
 
 			v1, _, _ := pRune.Rune("r")
 			v2, _, _ := pInt32.Int32("r")
@@ -203,17 +204,17 @@ var _ = Describe("KeysetPayloadBuilder", func() {
 
 	Describe("AddFloat32", func() {
 		It("round-trips through Float32", func() {
-			p := (&pagetoken.KeysetPayloadBuilder{}).AddFloat32("f", 1.5, pagetoken.OrderAsc).Build()
+			p := (&pagetoken.KeysetPayloadBuilder{}).AddFloat32("f", 1.5, order.Asc).Build()
 			v, o, err := p.Float32("f")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(float32(1.5)))
-			Expect(o).To(Equal(pagetoken.OrderAsc))
+			Expect(o).To(Equal(order.Asc))
 		})
 	})
 
 	Describe("AddFloat64", func() {
 		It("round-trips through Float64", func() {
-			p := (&pagetoken.KeysetPayloadBuilder{}).AddFloat64("f", 3.141592653589793, pagetoken.OrderDesc).Build()
+			p := (&pagetoken.KeysetPayloadBuilder{}).AddFloat64("f", 3.141592653589793, order.Desc).Build()
 			v, _, err := p.Float64("f")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(3.141592653589793))
@@ -225,11 +226,11 @@ var _ = Describe("KeysetPayloadBuilder", func() {
 	Describe("AddTime", func() {
 		It("round-trips through Time", func() {
 			ts := time.Date(2024, 6, 15, 12, 30, 45, 123456789, time.UTC)
-			p := (&pagetoken.KeysetPayloadBuilder{}).AddTime("t", ts, pagetoken.OrderDesc).Build()
+			p := (&pagetoken.KeysetPayloadBuilder{}).AddTime("t", ts, order.Desc).Build()
 			v, o, err := p.Time("t")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(ts))
-			Expect(o).To(Equal(pagetoken.OrderDesc))
+			Expect(o).To(Equal(order.Desc))
 		})
 	})
 
@@ -237,17 +238,17 @@ var _ = Describe("KeysetPayloadBuilder", func() {
 
 	Describe("AddComplex64", func() {
 		It("round-trips through Complex64", func() {
-			p := (&pagetoken.KeysetPayloadBuilder{}).AddComplex64("c", 1+2i, pagetoken.OrderAsc).Build()
+			p := (&pagetoken.KeysetPayloadBuilder{}).AddComplex64("c", 1+2i, order.Asc).Build()
 			v, o, err := p.Complex64("c")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(complex64(1 + 2i)))
-			Expect(o).To(Equal(pagetoken.OrderAsc))
+			Expect(o).To(Equal(order.Asc))
 		})
 	})
 
 	Describe("AddComplex128", func() {
 		It("round-trips through Complex128", func() {
-			p := (&pagetoken.KeysetPayloadBuilder{}).AddComplex128("c", 3+4i, pagetoken.OrderDesc).Build()
+			p := (&pagetoken.KeysetPayloadBuilder{}).AddComplex128("c", 3+4i, order.Desc).Build()
 			v, _, err := p.Complex128("c")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(complex128(3 + 4i)))
@@ -259,21 +260,21 @@ var _ = Describe("KeysetPayloadBuilder", func() {
 	Describe("AddKeysetValue", func() {
 		It("encodes using the supplied function and round-trips through GetKeysetValue", func() {
 			b := &pagetoken.KeysetPayloadBuilder{}
-			pagetoken.AddKeysetValue(b, "n", 99, pagetoken.OrderAsc, strconv.Itoa)
+			pagetoken.AddKeysetValue(b, "n", 99, order.Asc, strconv.Itoa)
 			p := b.Build()
 
 			v, o, err := pagetoken.GetKeysetValue(p, "n", strconv.Atoi)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(99))
-			Expect(o).To(Equal(pagetoken.OrderAsc))
+			Expect(o).To(Equal(order.Asc))
 		})
 
 		It("supports chaining by returning the builder", func() {
 			p := pagetoken.AddKeysetValue(
 				&pagetoken.KeysetPayloadBuilder{},
-				"a", "hello", pagetoken.OrderAsc,
+				"a", "hello", order.Asc,
 				func(s string) string { return s },
-			).AddString("b", "world", pagetoken.OrderDesc).Build()
+			).AddString("b", "world", order.Desc).Build()
 
 			Expect(p.Values()).To(HaveLen(2))
 		})

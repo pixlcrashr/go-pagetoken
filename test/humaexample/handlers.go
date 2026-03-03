@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
-	"strings"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/pixlcrashr/go-pagetoken"
+	"github.com/pixlcrashr/go-pagetoken/order"
 	"github.com/pixlcrashr/go-pagetoken/test/humaexample/db/model"
 	"github.com/pixlcrashr/go-pagetoken/test/humaexample/db/repository"
 	"github.com/samber/lo"
@@ -35,29 +35,18 @@ func (h *Handler) ListBooksDAO(ctx context.Context, req *ListBooksRequest) (*Lis
 		return nil, ErrInvalidPageToken
 	}
 
-	order := []repository.DefaultOrderEntry{}
+	oFs := order.Fields{}
 	if req.OrderBy != "" {
-		order = lo.Map(strings.Split(req.OrderBy, ","), func(s string, _ int) repository.DefaultOrderEntry {
-			ps := strings.Split(s, " ")
-			if len(ps) == 1 {
-				ps = append(ps, "DESC")
-			}
-			o, err := pagetoken.ParseOrder(ps[1])
-			if err != nil {
-				panic(err)
-			}
-			return repository.DefaultOrderEntry{
-				Column: ps[0],
-				Order:  o,
-			}
-		})
+		if err := oFs.UnmarshalString(req.OrderBy); err != nil {
+			return nil, ErrInvalidOrderBy
+		}
 	}
 
 	ms, nextPayload, err := h.r.ListByKeyset(
 		ctx,
 		repository.ListFilter{},
 		req.PageSize,
-		order,
+		oFs,
 		t.Payload(),
 	)
 	if err != nil {

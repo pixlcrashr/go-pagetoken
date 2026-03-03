@@ -9,6 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/pixlcrashr/go-pagetoken"
+	"github.com/pixlcrashr/go-pagetoken/order"
 )
 
 // build is a test helper that constructs a KeysetPayload via the builder.
@@ -28,8 +29,8 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns values in insertion order", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("a", "first", pagetoken.OrderAsc).
-					AddString("b", "second", pagetoken.OrderDesc)
+				b.AddString("a", "first", order.Asc).
+					AddString("b", "second", order.Desc)
 			})
 			Expect(p.Values()).To(HaveLen(2))
 			Expect(p.Values()[0].Path).To(Equal("a"))
@@ -42,12 +43,12 @@ var _ = Describe("KeysetPayload", func() {
 	Describe("String", func() {
 		It("returns the stored string and order", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("s", "hello", pagetoken.OrderAsc)
+				b.AddString("s", "hello", order.Asc)
 			})
 			v, o, err := p.String("s")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal("hello"))
-			Expect(o).To(Equal(pagetoken.OrderAsc))
+			Expect(o).To(Equal(order.Asc))
 		})
 
 		It("returns ErrFieldNotFound for a missing key", func() {
@@ -61,7 +62,7 @@ var _ = Describe("KeysetPayload", func() {
 
 	Describe("Bool", func() {
 		DescribeTable("round-trips valid booleans",
-			func(v bool, order pagetoken.Order) {
+			func(v bool, order order.Order) {
 				p := build(func(b *pagetoken.KeysetPayloadBuilder) {
 					b.AddBool("b", v, order)
 				})
@@ -70,8 +71,8 @@ var _ = Describe("KeysetPayload", func() {
 				Expect(got).To(Equal(v))
 				Expect(gotOrder).To(Equal(order))
 			},
-			Entry("true / asc", true, pagetoken.OrderAsc),
-			Entry("false / desc", false, pagetoken.OrderDesc),
+			Entry("true / asc", true, order.Asc),
+			Entry("false / desc", false, order.Desc),
 		)
 
 		It("returns ErrFieldNotFound for a missing key", func() {
@@ -82,7 +83,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns an error for an invalid raw value", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("b", "not-a-bool", pagetoken.OrderAsc)
+				b.AddString("b", "not-a-bool", order.Asc)
 			})
 			_, _, err := p.Bool("b")
 			Expect(err).To(HaveOccurred())
@@ -94,12 +95,12 @@ var _ = Describe("KeysetPayload", func() {
 	Describe("Int", func() {
 		It("round-trips via AddInt", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddInt("n", -42, pagetoken.OrderDesc)
+				b.AddInt("n", -42, order.Desc)
 			})
 			v, o, err := p.Int("n")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(-42))
-			Expect(o).To(Equal(pagetoken.OrderDesc))
+			Expect(o).To(Equal(order.Desc))
 		})
 
 		It("returns ErrFieldNotFound for a missing key", func() {
@@ -109,7 +110,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns an error for an invalid raw value", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("n", "not-an-int", pagetoken.OrderAsc)
+				b.AddString("n", "not-an-int", order.Asc)
 			})
 			_, _, err := p.Int("n")
 			Expect(err).To(HaveOccurred())
@@ -119,12 +120,12 @@ var _ = Describe("KeysetPayload", func() {
 	Describe("Int8", func() {
 		It("round-trips via AddInt8", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddInt8("n", -8, pagetoken.OrderAsc)
+				b.AddInt8("n", -8, order.Asc)
 			})
 			v, o, err := p.Int8("n")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(int8(-8)))
-			Expect(o).To(Equal(pagetoken.OrderAsc))
+			Expect(o).To(Equal(order.Asc))
 		})
 
 		It("returns ErrFieldNotFound for a missing key", func() {
@@ -134,7 +135,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns an error for an out-of-range value", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("n", "999", pagetoken.OrderAsc)
+				b.AddString("n", "999", order.Asc)
 			})
 			_, _, err := p.Int8("n")
 			Expect(err).To(HaveOccurred())
@@ -144,7 +145,7 @@ var _ = Describe("KeysetPayload", func() {
 	Describe("Int16", func() {
 		It("round-trips via AddInt16", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddInt16("n", -1000, pagetoken.OrderDesc)
+				b.AddInt16("n", -1000, order.Desc)
 			})
 			v, _, err := p.Int16("n")
 			Expect(err).NotTo(HaveOccurred())
@@ -158,7 +159,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns an error for an invalid raw value", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("n", "not-a-number", pagetoken.OrderAsc)
+				b.AddString("n", "not-a-number", order.Asc)
 			})
 			_, _, err := p.Int16("n")
 			Expect(err).To(HaveOccurred())
@@ -166,7 +167,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns an error for an out-of-range value", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("n", "99999", pagetoken.OrderAsc)
+				b.AddString("n", "99999", order.Asc)
 			})
 			_, _, err := p.Int16("n")
 			Expect(err).To(HaveOccurred())
@@ -176,7 +177,7 @@ var _ = Describe("KeysetPayload", func() {
 	Describe("Int32", func() {
 		It("round-trips via AddInt32", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddInt32("n", -100000, pagetoken.OrderAsc)
+				b.AddInt32("n", -100000, order.Asc)
 			})
 			v, _, err := p.Int32("n")
 			Expect(err).NotTo(HaveOccurred())
@@ -190,7 +191,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns an error for an invalid raw value", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("n", "not-a-number", pagetoken.OrderAsc)
+				b.AddString("n", "not-a-number", order.Asc)
 			})
 			_, _, err := p.Int32("n")
 			Expect(err).To(HaveOccurred())
@@ -198,7 +199,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns an error for an out-of-range value", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("n", "9999999999", pagetoken.OrderAsc)
+				b.AddString("n", "9999999999", order.Asc)
 			})
 			_, _, err := p.Int32("n")
 			Expect(err).To(HaveOccurred())
@@ -208,12 +209,12 @@ var _ = Describe("KeysetPayload", func() {
 	Describe("Int64", func() {
 		It("round-trips via AddInt64", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddInt64("n", -9000000000, pagetoken.OrderDesc)
+				b.AddInt64("n", -9000000000, order.Desc)
 			})
 			v, o, err := p.Int64("n")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(int64(-9000000000)))
-			Expect(o).To(Equal(pagetoken.OrderDesc))
+			Expect(o).To(Equal(order.Desc))
 		})
 
 		It("returns ErrFieldNotFound for a missing key", func() {
@@ -223,7 +224,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns an error for an invalid raw value", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("n", "not-a-number", pagetoken.OrderAsc)
+				b.AddString("n", "not-a-number", order.Asc)
 			})
 			_, _, err := p.Int64("n")
 			Expect(err).To(HaveOccurred())
@@ -231,7 +232,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns an error for an out-of-range value", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("n", "99999999999999999999", pagetoken.OrderAsc)
+				b.AddString("n", "99999999999999999999", order.Asc)
 			})
 			_, _, err := p.Int64("n")
 			Expect(err).To(HaveOccurred())
@@ -243,12 +244,12 @@ var _ = Describe("KeysetPayload", func() {
 	Describe("Uint", func() {
 		It("round-trips via AddUint", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddUint("n", 42, pagetoken.OrderAsc)
+				b.AddUint("n", 42, order.Asc)
 			})
 			v, o, err := p.Uint("n")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(uint(42)))
-			Expect(o).To(Equal(pagetoken.OrderAsc))
+			Expect(o).To(Equal(order.Asc))
 		})
 
 		It("returns ErrFieldNotFound for a missing key", func() {
@@ -258,7 +259,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns an error for an invalid raw value", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("n", "not-a-uint", pagetoken.OrderAsc)
+				b.AddString("n", "not-a-uint", order.Asc)
 			})
 			_, _, err := p.Uint("n")
 			Expect(err).To(HaveOccurred())
@@ -268,7 +269,7 @@ var _ = Describe("KeysetPayload", func() {
 	Describe("Uint8", func() {
 		It("round-trips via AddUint8", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddUint8("n", 255, pagetoken.OrderDesc)
+				b.AddUint8("n", 255, order.Desc)
 			})
 			v, _, err := p.Uint8("n")
 			Expect(err).NotTo(HaveOccurred())
@@ -282,7 +283,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns an error for an out-of-range value", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("n", "999", pagetoken.OrderAsc)
+				b.AddString("n", "999", order.Asc)
 			})
 			_, _, err := p.Uint8("n")
 			Expect(err).To(HaveOccurred())
@@ -292,7 +293,7 @@ var _ = Describe("KeysetPayload", func() {
 	Describe("Uint16", func() {
 		It("round-trips via AddUint16", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddUint16("n", 1000, pagetoken.OrderAsc)
+				b.AddUint16("n", 1000, order.Asc)
 			})
 			v, _, err := p.Uint16("n")
 			Expect(err).NotTo(HaveOccurred())
@@ -306,7 +307,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns an error for an invalid raw value", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("n", "not-a-number", pagetoken.OrderAsc)
+				b.AddString("n", "not-a-number", order.Asc)
 			})
 			_, _, err := p.Uint16("n")
 			Expect(err).To(HaveOccurred())
@@ -314,7 +315,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns an error for an out-of-range value", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("n", "99999", pagetoken.OrderAsc)
+				b.AddString("n", "99999", order.Asc)
 			})
 			_, _, err := p.Uint16("n")
 			Expect(err).To(HaveOccurred())
@@ -324,7 +325,7 @@ var _ = Describe("KeysetPayload", func() {
 	Describe("Uint32", func() {
 		It("round-trips via AddUint32", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddUint32("n", 100000, pagetoken.OrderDesc)
+				b.AddUint32("n", 100000, order.Desc)
 			})
 			v, _, err := p.Uint32("n")
 			Expect(err).NotTo(HaveOccurred())
@@ -338,7 +339,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns an error for an invalid raw value", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("n", "not-a-number", pagetoken.OrderAsc)
+				b.AddString("n", "not-a-number", order.Asc)
 			})
 			_, _, err := p.Uint32("n")
 			Expect(err).To(HaveOccurred())
@@ -346,7 +347,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns an error for an out-of-range value", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("n", "9999999999", pagetoken.OrderAsc)
+				b.AddString("n", "9999999999", order.Asc)
 			})
 			_, _, err := p.Uint32("n")
 			Expect(err).To(HaveOccurred())
@@ -356,12 +357,12 @@ var _ = Describe("KeysetPayload", func() {
 	Describe("Uint64", func() {
 		It("round-trips via AddUint64", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddUint64("n", 9000000000, pagetoken.OrderAsc)
+				b.AddUint64("n", 9000000000, order.Asc)
 			})
 			v, o, err := p.Uint64("n")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(uint64(9000000000)))
-			Expect(o).To(Equal(pagetoken.OrderAsc))
+			Expect(o).To(Equal(order.Asc))
 		})
 
 		It("returns ErrFieldNotFound for a missing key", func() {
@@ -371,7 +372,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns an error for an invalid raw value", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("n", "not-a-number", pagetoken.OrderAsc)
+				b.AddString("n", "not-a-number", order.Asc)
 			})
 			_, _, err := p.Uint64("n")
 			Expect(err).To(HaveOccurred())
@@ -379,7 +380,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns an error for an out-of-range value", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("n", "99999999999999999999", pagetoken.OrderAsc)
+				b.AddString("n", "99999999999999999999", order.Asc)
 			})
 			_, _, err := p.Uint64("n")
 			Expect(err).To(HaveOccurred())
@@ -392,7 +393,7 @@ var _ = Describe("KeysetPayload", func() {
 		It("is consistent with Uint8", func() {
 			const val byte = 0xAB
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddByte("b", val, pagetoken.OrderAsc)
+				b.AddByte("b", val, order.Asc)
 			})
 			byteVal, _, err := p.Byte("b")
 			Expect(err).NotTo(HaveOccurred())
@@ -408,7 +409,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns an error for an invalid raw value", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("b", "not-a-number", pagetoken.OrderAsc)
+				b.AddString("b", "not-a-number", order.Asc)
 			})
 			_, _, err := p.Byte("b")
 			Expect(err).To(HaveOccurred())
@@ -416,7 +417,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns an error for an out-of-range value", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("b", "999", pagetoken.OrderAsc)
+				b.AddString("b", "999", order.Asc)
 			})
 			_, _, err := p.Byte("b")
 			Expect(err).To(HaveOccurred())
@@ -427,7 +428,7 @@ var _ = Describe("KeysetPayload", func() {
 		It("is consistent with Int32", func() {
 			const val rune = '✓'
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddRune("r", val, pagetoken.OrderDesc)
+				b.AddRune("r", val, order.Desc)
 			})
 			runeVal, _, err := p.Rune("r")
 			Expect(err).NotTo(HaveOccurred())
@@ -443,7 +444,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns an error for an invalid raw value", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("r", "not-a-number", pagetoken.OrderAsc)
+				b.AddString("r", "not-a-number", order.Asc)
 			})
 			_, _, err := p.Rune("r")
 			Expect(err).To(HaveOccurred())
@@ -451,7 +452,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns an error for an out-of-range value", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("r", "9999999999", pagetoken.OrderAsc)
+				b.AddString("r", "9999999999", order.Asc)
 			})
 			_, _, err := p.Rune("r")
 			Expect(err).To(HaveOccurred())
@@ -463,12 +464,12 @@ var _ = Describe("KeysetPayload", func() {
 	Describe("Float32", func() {
 		It("round-trips via AddFloat32", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddFloat32("f", 1.5, pagetoken.OrderAsc)
+				b.AddFloat32("f", 1.5, order.Asc)
 			})
 			v, o, err := p.Float32("f")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(float32(1.5)))
-			Expect(o).To(Equal(pagetoken.OrderAsc))
+			Expect(o).To(Equal(order.Asc))
 		})
 
 		It("returns ErrFieldNotFound for a missing key", func() {
@@ -478,7 +479,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns an error for an invalid raw value", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("f", "not-a-float", pagetoken.OrderAsc)
+				b.AddString("f", "not-a-float", order.Asc)
 			})
 			_, _, err := p.Float32("f")
 			Expect(err).To(HaveOccurred())
@@ -488,12 +489,12 @@ var _ = Describe("KeysetPayload", func() {
 	Describe("Float64", func() {
 		It("round-trips via AddFloat64", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddFloat64("f", 3.141592653589793, pagetoken.OrderDesc)
+				b.AddFloat64("f", 3.141592653589793, order.Desc)
 			})
 			v, o, err := p.Float64("f")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(3.141592653589793))
-			Expect(o).To(Equal(pagetoken.OrderDesc))
+			Expect(o).To(Equal(order.Desc))
 		})
 
 		It("returns ErrFieldNotFound for a missing key", func() {
@@ -503,7 +504,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns an error for an invalid raw value", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("f", "not-a-float", pagetoken.OrderAsc)
+				b.AddString("f", "not-a-float", order.Asc)
 			})
 			_, _, err := p.Float64("f")
 			Expect(err).To(HaveOccurred())
@@ -515,12 +516,12 @@ var _ = Describe("KeysetPayload", func() {
 	Describe("Complex64", func() {
 		It("round-trips via AddComplex64", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddComplex64("c", 1+2i, pagetoken.OrderAsc)
+				b.AddComplex64("c", 1+2i, order.Asc)
 			})
 			v, o, err := p.Complex64("c")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(complex64(1 + 2i)))
-			Expect(o).To(Equal(pagetoken.OrderAsc))
+			Expect(o).To(Equal(order.Asc))
 		})
 
 		It("returns ErrFieldNotFound for a missing key", func() {
@@ -530,7 +531,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns an error for an invalid raw value", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("c", "not-complex", pagetoken.OrderAsc)
+				b.AddString("c", "not-complex", order.Asc)
 			})
 			_, _, err := p.Complex64("c")
 			Expect(err).To(HaveOccurred())
@@ -540,12 +541,12 @@ var _ = Describe("KeysetPayload", func() {
 	Describe("Complex128", func() {
 		It("round-trips via AddComplex128", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddComplex128("c", 3+4i, pagetoken.OrderDesc)
+				b.AddComplex128("c", 3+4i, order.Desc)
 			})
 			v, o, err := p.Complex128("c")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(complex128(3 + 4i)))
-			Expect(o).To(Equal(pagetoken.OrderDesc))
+			Expect(o).To(Equal(order.Desc))
 		})
 
 		It("returns ErrFieldNotFound for a missing key", func() {
@@ -555,7 +556,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns an error for an invalid raw value", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("c", "not-complex", pagetoken.OrderAsc)
+				b.AddString("c", "not-complex", order.Asc)
 			})
 			_, _, err := p.Complex128("c")
 			Expect(err).To(HaveOccurred())
@@ -568,12 +569,12 @@ var _ = Describe("KeysetPayload", func() {
 		It("round-trips via AddTime", func() {
 			ts := time.Date(2024, 6, 15, 12, 30, 45, 123456789, time.UTC)
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddTime("t", ts, pagetoken.OrderAsc)
+				b.AddTime("t", ts, order.Asc)
 			})
 			v, o, err := p.Time("t")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(ts))
-			Expect(o).To(Equal(pagetoken.OrderAsc))
+			Expect(o).To(Equal(order.Asc))
 		})
 
 		It("returns ErrFieldNotFound for a missing key", func() {
@@ -583,7 +584,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("returns an error for an invalid raw value", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("t", "not-a-time", pagetoken.OrderAsc)
+				b.AddString("t", "not-a-time", order.Asc)
 			})
 			_, _, err := p.Time("t")
 			Expect(err).To(HaveOccurred())
@@ -595,12 +596,12 @@ var _ = Describe("KeysetPayload", func() {
 	Describe("GetKeysetValue", func() {
 		It("decodes using the supplied function", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("k", "99", pagetoken.OrderAsc)
+				b.AddString("k", "99", order.Asc)
 			})
 			v, o, err := pagetoken.GetKeysetValue(p, "k", strconv.Atoi)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal(99))
-			Expect(o).To(Equal(pagetoken.OrderAsc))
+			Expect(o).To(Equal(order.Asc))
 		})
 
 		It("returns ErrFieldNotFound for a missing key", func() {
@@ -611,7 +612,7 @@ var _ = Describe("KeysetPayload", func() {
 
 		It("propagates a decode error", func() {
 			p := build(func(b *pagetoken.KeysetPayloadBuilder) {
-				b.AddString("k", "bad", pagetoken.OrderAsc)
+				b.AddString("k", "bad", order.Asc)
 			})
 			decodeErr := errors.New("bad value")
 			_, _, err := pagetoken.GetKeysetValue(p, "k", func(string) (int, error) {
